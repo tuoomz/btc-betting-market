@@ -7,15 +7,18 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract BettingContract {
     using Address for address payable;
 
+    enum Direction { Long, Short }
+
     struct Bet {
-        address userA;
-        address userB;
-        uint256 betAmount;
+        address proposer;
+        address acceptor;
+        uint256 amount;
         uint256 expirationTime;
         uint256 closingTime;
         bool isActive;
         uint256 openingPrice;
         uint256 closingPrice;
+        Direction direction;
     }
 
     mapping(uint256 => Bet) public bets;
@@ -35,7 +38,8 @@ contract BettingContract {
     function openBet(
         uint256 _expirationTime,
         uint256 _closingTime,
-        uint256 _betAmount
+        uint256 _betAmount,
+        Direction _direction
     ) external {
         require(_expirationTime > block.timestamp, "Expiration time must be in the future");
         require(_closingTime > _expirationTime, "Closing time must be after expiration time");
@@ -45,14 +49,15 @@ contract BettingContract {
         token.transferFrom(msg.sender, address(this), _betAmount);
 
         bets[totalBets] = Bet({
-            userA: msg.sender,
-            userB: address(0),
+            betProposer: msg.sender,
+            betAcceptor: address(0),
             betAmount: _betAmount,
             expirationTime: _expirationTime,
             closingTime: _closingTime,
             isActive: false,
             openingPrice: 0,
-            closingPrice: 0
+            closingPrice: 0,
+            direction: _direction
         });
 
         emit BetOpened(totalBets, msg.sender, _betAmount);
@@ -63,14 +68,14 @@ contract BettingContract {
         require(_betId < totalBets, "Invalid bet ID");
         Bet storage bet = bets[_betId];
         require(!bet.isActive, "Bet is already active");
-        require(bet.userB == address(0), "Bet already has a user B");
-        require(bet.userA != msg.sender, "User A cannot join their own bet");
+        require(bet.proposer == address(0), "Bet already accepted");
+        require(bet.acceptor != msg.sender, "User A cannot join their own bet");
 
         IERC20 token = IERC20(tokenAddress);
-        uint256 betAmount = bet.betAmount;
+        uint256 betAmount = bet.amount;
         token.transferFrom(msg.sender, address(this), betAmount);
 
-        bet.userB = msg.sender;
+        bet.acceptor = msg.sender;
         bet.isActive = true;
 
         emit BetJoined(_betId, msg.sender, betAmount);
@@ -87,13 +92,13 @@ contract BettingContract {
 
         address payable winner;
         if (bet.openingPrice < bet.closingPrice) {
-            winner = payable(bet.userA);
+            winner = payable(bet.proposer);
         } else {
-            winner = payable(bet.userB);
+            winner = payable(bet.acceptor);
         }
 
         IERC20 token = IERC20(tokenAddress);
-        uint256 winnings = bet.betAmount * 2;
+        uint256 winnings = bet.amount * 2;
         token.transfer(winner, winnings);
 
         emit BetClosed(_betId, winner, winnings);
