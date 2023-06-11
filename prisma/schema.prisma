@@ -1,0 +1,19 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = "mongodb+srv://tuoomz:UR6qk68J2kUKJ5dH@cluster30002.exl8c34.mongodb.net/eventdb?retryWrites=true"
+}
+
+
+model Event {
+  hash    String      @id @map("_id")
+  name    String
+  address String
+  data    Json
+}

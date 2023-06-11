@@ -1,0 +1,15 @@
+{
+  "name": "btc-betting-market",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Philip Tuomey <philip@plutodigital.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "4.15.0",
+    "@typechain/ethers-v6": "0.4.0",
+    "dotenv": "16.1.4",
+    "ethers": "6.5.1",
+    "prisma": "4.15.0",
+    "typechain": "8.2.0"
+  }
+}
